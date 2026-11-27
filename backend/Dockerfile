@@ -2,12 +2,15 @@
 FROM maven:3.9.9-eclipse-temurin-17 AS build
 WORKDIR /app
 
+# Limit concurrent downloads to avoid Maven Central 429 Too Many Requests on shared Render IPs
+ENV MAVEN_OPTS="-Daether.connector.basic.threads=1"
+
 # Cache dependencies separately from source for faster rebuilds
 COPY pom.xml .
 RUN mvn -q -B dependency:go-offline
 
 COPY src ./src
-RUN mvn -q -B -DskipTests package
+RUN mvn -q -B -o -DskipTests package || mvn -q -B -DskipTests package
 
 # ---------- Runtime stage ----------
 FROM eclipse-temurin:17-jre-alpine
