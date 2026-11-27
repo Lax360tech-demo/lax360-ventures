@@ -2,10 +2,11 @@
 FROM maven:3.9.9-eclipse-temurin-17 AS build
 WORKDIR /app
 
-# Limit concurrent downloads to avoid Maven Central 429 Too Many Requests on shared Render IPs
-ENV MAVEN_OPTS="-Daether.connector.basic.threads=1"
+# Limit concurrent downloads and use Google's Maven Central mirror to avoid HTTP 429 on shared Render IPs
+ENV MAVEN_OPTS="-Daether.connector.basic.threads=2"
 
 # Cache dependencies separately from source for faster rebuilds
+COPY maven-settings.xml /root/.m2/settings.xml
 COPY pom.xml .
 RUN mvn -q -B dependency:go-offline
 
